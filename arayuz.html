@@ -1,0 +1,698 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yapı Sağlığı – Ön Tarama Aracı</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+
+        .app {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 24px;
+            background: #020617;
+            border-radius: 18px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 1px solid #1f2937;
+        }
+
+        header {
+            margin-bottom: 24px;
+            border-bottom: 1px solid #1f2937;
+            padding-bottom: 16px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 1.6rem;
+            color: #f9fafb;
+        }
+
+        header p {
+            margin: 2px 0;
+            font-size: 0.92rem;
+            color: #9ca3af;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: #020617;
+            border-radius: 16px;
+            padding: 18px 18px 20px;
+            border: 1px solid #1f2937;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 14px;
+            font-size: 1.15rem;
+            color: #f9fafb;
+        }
+
+        form label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            color: #e5e7eb;
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            font-size: 0.86rem;
+            color: #e5e7eb;
+        }
+
+        .inline-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .inline-options label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 0;
+        }
+
+        small {
+            display: block;
+            font-size: 0.78rem;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 9px 18px;
+            background: #22c55e;
+            color: #022c22;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        button:hover {
+            background: #16a34a;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-low {
+            background: #064e3b;
+            color: #bbf7d0;
+        }
+
+        .badge-mid {
+            background: #78350f;
+            color: #fed7aa;
+        }
+
+        .badge-high {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .score {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin: 2px 0 8px;
+        }
+
+        .score small {
+            font-size: 0.8rem;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 6px 0 10px;
+        }
+
+        .pill {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #020617;
+            border: 1px solid #1f2937;
+            color: #e5e7eb;
+        }
+
+        .warning {
+            margin-top: 10px;
+            padding: 8px 10px;
+            font-size: 0.78rem;
+            border-radius: 10px;
+            border: 1px dashed #f97316;
+            background: rgba(250, 204, 21, 0.06);
+            color: #fbbf24;
+        }
+
+        .muted {
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <h1>Yapı Sağlığı – Web Tabanlı Ön Tarama Aracı</h1>
+        <p>Vatandaş ve mühendis için basit bir ön değerlendirme formu.</p>
+        <p class="muted">Bu sistem, sadece bilgilendirme amaçlıdır ve resmi deprem performans analizi yerine geçmez.</p>
+    </header>
+
+    <div class="layout">
+        <!-- SOL: FORM -->
+        <section class="card">
+            <h2>Bina Bilgileri Formu</h2>
+            <form id="riskForm">
+                <!-- İl / ilçe -->
+                <div class="form-group">
+                    <label>İl</label>
+                    <input type="text" id="ilInput" placeholder="Örn: İstanbul" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>İlçe</label>
+                    <input type="text" id="ilceInput" placeholder="Örn: Kadıköy" class="form-control">
+                </div>
+
+                <button type="button"
+                        onclick="konumuAl()"
+                        style="margin-top:10px; padding:10px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer;">
+                    📍 Konumumu Bul ve Doldur
+                </button>
+                <p id="konumDurumu" style="color: yellow; font-size: 0.9em; margin-top: 5px;"></p>
+
+                <!-- Yapım yılı -->
+                <div class="field">
+                    <label for="yapimYili">Yapım yılı</label>
+                    <input type="number" id="yapimYili" name="yapimYili" min="1950" max="2025"
+                           placeholder="Örn: 1998" required />
+                    <small>Yaklaşık da olsa yazılabilir.</small>
+                </div>
+
+                <!-- Kat sayısı -->
+                <div class="field">
+                    <label for="katSayisi">Kat sayısı</label>
+                    <input type="number" id="katSayisi" name="katSayisi" min="1" max="40"
+                           placeholder="Örn: 7" required />
+                </div>
+
+                <!-- Zemin kat dükkan mı -->
+                <div class="field">
+                    <label>Zemin katta dükkân / büyük açıklık var mı?</label>
+                    <div class="inline-options">
+                        <label><input type="radio" name="zeminDukkan" value="evet" required> Evet</label>
+                        <label><input type="radio" name="zeminDukkan" value="hayir"> Hayır</label>
+                    </div>
+                    <small>Soft-story (zayıf kat) riski için ön bilgi.</small>
+                </div>
+
+                <!-- Bitişik nizam mı -->
+                <div class="field">
+                    <label>Bina bitişik nizam mı?</label>
+                    <div class="inline-options">
+                        <label><input type="radio" name="bitisik" value="evet" required> Evet</label>
+                        <label><input type="radio" name="bitisik" value="hayir"> Hayır</label>
+                    </div>
+                </div>
+                <!-- Bina kullanım amacı -->
+<div class="field">
+    <label for="kullanimAmaci">Bina kullanım amacı</label>
+    <select id="kullanimAmaci" name="kullanimAmaci" required>
+        <option value="">Seçiniz...</option>
+        <option value="konut">Konut</option>
+        <option value="ofis">Ofis</option>
+        <option value="magaza">Mağaza / AVM</option>
+        <option value="karma">Karma (altı işyeri, üstü konut vb.)</option>
+        <option value="okul">Okul</option>
+        <option value="hastane">Hastane</option>
+        <option value="sanayi">Sanayi / Depo</option>
+    </select>
+    <small>Kritik kullanım türleri (okul, hastane, sanayi vb.) risk hesabında biraz daha ağır basar.</small>
+</div>
+
+<!-- Kısa kolon durumu -->
+<div class="field">
+    <label>Kısa kolon var mı?</label>
+    <div class="inline-options">
+        <label><input type="radio" name="kisaKolon" value="yok" checked> Yok</label>
+        <label><input type="radio" name="kisaKolon" value="var"> Var</label>
+        <label><input type="radio" name="kisaKolon" value="emin_degil"> Emin değilim</label>
+    </div>
+    <small>Örneğin pencere altına kadar dolu duvar, üstte cam boşluğu kalan kolonlar kısa kolon sayılabilir.</small>
+</div>
+
+<!-- Ağır çıkma durumu -->
+<div class="field">
+    <label for="agirCikma">Üst katlarda çıkma / taşma durumu</label>
+    <select id="agirCikma" name="agirCikma" required>
+        <option value="yok">Yok</option>
+        <option value="hafif">Hafif (balkon, küçük çıkmalar)</option>
+        <option value="buyuk">Büyük (üst kat oturumu belirgin daha geniş)</option>
+    </select>
+</div>
+
+<!-- Plan şekli -->
+<div class="field">
+    <label for="planTipi">Bina plan şekli</label>
+    <select id="planTipi" name="planTipi" required>
+        <option value="dikdortgen">Dikdörtgen / Kare</option>
+        <option value="L">L tipi</option>
+        <option value="T">T tipi</option>
+        <option value="U">U tipi</option>
+        <option value="kompleks">Daha karmaşık / düzensiz</option>
+    </select>
+</div>
+
+<!-- Bitişik nizamda kat hizası -->
+<div class="field" id="bitisikHizaField" style="display: none;">
+    <label for="bitisikHiza">Bitişik binayla kat hizası</label>
+    <select id="bitisikHiza" name="bitisikHiza">
+        <option value="uyumlu">Kat hizaları benzer / uyumlu</option>
+        <option value="farkli">Yan bina belirgin daha yüksek / daha düşük</option>
+    </select>
+    <small>Kat hizaları farklıysa depremde "çekiçleme" riski artar.</small>
+</div>
+
+
+                <!-- Gözle görülen hasar -->
+                <div class="field">
+                    <label for="hasar">Gözle görülür büyük çatlak veya kolonda hasar var mı?</label>
+                    <select id="hasar" name="hasar" required>
+                        <option value="">Seçiniz...</option>
+                        <option value="yok">Hayır, belirgin çatlak yok</option>
+                        <option value="hafif">Bazı çatlaklar var ama kolonda değil</option>
+                        <option value="kolon">Kolonda/taşıyıcıda çatlak veya ezilme var</option>
+                    </select>
+                </div>
+
+                <!-- Fotoğraf yükleme -->
+                <div class="field">
+                    <label for="foto">Bina / hasar fotoğrafı (isteğe bağlı)</label>
+                    <input type="file" id="foto" name="foto" multiple accept="image/*" />
+                    <small>En fazla 1–2 fotoğraf yüklenmesi önerilir.</small>
+                </div>
+
+                <button type="submit" id="submitBtn">Risk Skorunu Hesapla</button>
+            </form>
+        </section>
+
+        <!-- SAĞ: SONUÇ -->
+        <section class="card" id="resultCard">
+            <div class="result-header">
+                <h2>Ön Tarama Sonucu</h2>
+                <span class="badge badge-low" id="riskBadge">Henüz hesaplanmadı</span>
+            </div>
+
+            <div id="resultContent">
+                <p class="muted">
+                    Formu doldurup “Risk Skorunu Hesapla” butonuna bastığınızda,
+                    sistem bu bilgilerden basit bir <em>ön skor</em> ve
+                    “Düşük / Orta / Yüksek risk” etiketi üretecektir.
+                </p>
+            </div>
+
+            <div class="warning">
+                <strong>Önemli Uyarı:</strong><br />
+                Bu sonuç sadece ön bilgilendirme amaçlıdır;
+                resmî deprem performans analizi yerine geçmez.
+                Skorunuz yüksekse lisanslı bir mühendislik bürosuna başvurmanız önerilir.
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    const getRiskLevel = (il, ilce) => {
+  // Türkçe karakterleri İngilizce'ye çevirmeden sadece küçültüyoruz
+  const formatText = (text) => text.toLocaleLowerCase('tr-TR').trim();
+  
+  const formattedIl = formatText(il);
+  const formattedIlce = formatText(ilce);
+
+  const cityData = depremRiskMap[formattedIl];
+
+  if (!cityData) return "Bilinmeyen İl"; // Veya varsayılan bir değer
+
+  // İlçeye özel bir tanımlama varsa onu döndür, yoksa ilin varsayılanını döndür
+  return cityData[formattedIlce] || cityData._default;
+};
+
+// Örnek Kullanım:
+// console.log(getRiskLevel("İstanbul", "SARIYER")); // Çıktı: "orta"
+// console.log(getRiskLevel("Ankara", "Çankaya"));   // Çıktı: "düşük"
+    // AFAD Türkiye Deprem Tehlike Haritası (Genelleştirilmiş Veri Seti)
+// Not: Veriler ilçe genelindeki ortalama baskın risk seviyesini temsil eder.
+
+const depremRiskMap = {
+  "istanbul": {
+    _default: "yüksek", // İstanbul geneli riskli kabul edilir, kuzeye gidildikçe düşer
+    "arnavutköy": "düşük",
+    "sarıyer": "orta",
+    "eyüpsultan": "orta",
+    "beykoz": "düşük",
+    "şile": "düşük",
+    "çatalca": "orta",
+    "başakşehir": "orta",
+    // Özellikle Marmara denizine kıyısı olanlar "çok yüksek" risk grubundadır:
+    "avcılar": "yüksek",
+    "bakırköy": "yüksek",
+    "küçükçekmece": "yüksek",
+    "zeytinburnu": "yüksek",
+    "fatih": "yüksek",
+    "kadıköy": "yüksek",
+    "maltepe": "yüksek",
+    "kartal": "yüksek",
+    "tuzla": "yüksek",
+    "pendik": "yüksek",
+    "adalar": "yüksek"
+  },
+  "ankara": {
+    _default: "düşük", // Ankara'nın merkezi ve çoğu yeri güvenlidir
+    "elmadağ": "orta",
+    "nallıhan": "yüksek", // Kuzey Anadolu Fay Hattına yakın
+    "beypazarı": "orta",
+    "kazan": "orta",
+    "kızılcahamam": "yüksek",
+    "çamlıdere": "yüksek",
+    "evren": "orta",
+    "bala": "orta"
+  },
+  "izmir": {
+    _default: "yüksek", // İzmir'in neredeyse tamamı 1. derece (yüksek) risk bölgesindedir
+    "kiraz": "orta", // Kısmen daha düşük ivmeli
+    "beydağ": "orta"
+  },
+  "kocaeli": {
+    _default: "yüksek", // Tamamı KAF üzerindedir
+    "kandıra": "orta" // Karadeniz kıyısı görece daha güvenli
+  },
+  "sakarya": {
+    _default: "yüksek" // Tamamı çok yüksek riskli
+  },
+  "bursa": {
+    _default: "yüksek",
+    "büyükorhan": "orta",
+    "harmancık": "orta",
+    "keles": "orta"
+  },
+  "antalya": {
+    _default: "orta", // Merkez genelde 2. derece (orta) kabul edilir
+    "demre": "yüksek",
+    "finike": "yüksek",
+    "kumluca": "yüksek",
+    "kemer": "yüksek",
+    "kaş": "yüksek", // Fethiye-Burdur fay zonu etkisi
+    "alanya": "düşük",
+    "gündoğmuş": "düşük"
+  },
+  "konya": {
+    _default: "düşük", // Türkiye'nin en güvenli bölgelerinden
+    "akşehir": "yüksek", // "Pisidya" fay zonu etkisi
+    "tuzlukçu": "yüksek",
+    "ılgın": "orta",
+    "doğanhisar": "orta"
+  },
+  "kahramanmaraş": {
+    _default: "yüksek", // DAF hattı
+    "ekinözü": "orta"
+  },
+  "hatay": {
+    _default: "yüksek" // Tamamı çok yüksek riskli
+  },
+  "bingöl": {
+    _default: "yüksek" // KAF ve DAF kesişim noktası
+  },
+  "erzincan": {
+    _default: "yüksek"
+  },
+  "trabzon": {
+    _default: "düşük", // Karadeniz sahil şeridi genelde düşük risklidir
+    "of": "orta", // Kısmen heyelan ve ikincil riskler
+    "hayrat": "orta"
+  },
+  "rize": {
+    _default: "düşük"
+  },
+  "eskişehir": {
+    _default: "orta", // Şehir merkezinden fay geçer
+    "inönü": "yüksek"
+  },
+  "muğla": {
+    _default: "yüksek" // Güney Ege yayı etkisi
+  },
+  "aydın": {
+    _default: "yüksek"
+  }
+};
+    const API_URL = "http://127.0.0.1:8000/api/risk-hesapla";
+
+    const form = document.getElementById("riskForm");
+    const resultContent = document.getElementById("resultContent");
+    const riskBadge = document.getElementById("riskBadge");
+    const submitBtn = document.getElementById("submitBtn");
+
+    function genelRiskBadgeClass(seviye) {
+        if (seviye === "Düşük") return "badge-low";
+        if (seviye === "Orta") return "badge-mid";
+        return "badge-high";
+    }
+
+    // KONUM AL FONKSİYONU (eski dosyandaki gibi)
+    async function konumuAl() {
+        const durumKutusu = document.getElementById("konumDurumu");
+        const ilKutusu = document.getElementById("ilInput");
+        const ilceKutusu = document.getElementById("ilceInput");
+
+        if (!ilKutusu || !ilceKutusu) {
+            alert("HATA: HTML'deki inputların ID'leri 'ilInput' ve 'ilceInput' olmalı!");
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            durumKutusu.innerText = "Tarayıcı konum özelliğini desteklemiyor.";
+            return;
+        }
+
+        durumKutusu.innerText = "Konum alınıyor, izin verin...";
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                durumKutusu.innerText = "Adres bulunuyor...";
+
+                try {
+                    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data && data.address) {
+                        const il = data.address.province || data.address.city || data.address.state;
+                        const ilce = data.address.town || data.address.district || data.address.county || data.address.suburb;
+
+                        ilKutusu.value = il || "";
+                        ilceKutusu.value = ilce || "";
+
+                        durumKutusu.innerText = `Bulundu: ${il} / ${ilce}`;
+                    } else {
+                        durumKutusu.innerText = "Adres çözülemedi.";
+                    }
+                } catch (err) {
+                    durumKutusu.innerText = "Bağlantı hatası!";
+                    console.error(err);
+                }
+            },
+            (error) => {
+                console.error(error);
+                if (error.code === error.PERMISSION_DENIED) {
+                    durumKutusu.innerText = "Konum izni reddedildi.";
+                } else {
+                    durumKutusu.innerText = "Konum alınamadı. (Hata oluştu)";
+                }
+            }
+        );
+    }
+
+   // Bitişik seçimine göre kat hizası sorusunu aç/kapat
+const bitisikRadios = document.querySelectorAll('input[name="bitisik"]');
+const bitisikHizaField = document.getElementById("bitisikHizaField");
+
+bitisikRadios.forEach(radio => {
+    radio.addEventListener("change", () => {
+        if (radio.checked && radio.value === "evet") {
+            bitisikHizaField.style.display = "block";
+        } else if (radio.checked && radio.value === "hayir") {
+            bitisikHizaField.style.display = "none";
+        }
+    });
+});
+
+// FORM SUBMIT -> FastAPI'ye POST
+form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const il = document.getElementById("ilInput").value.trim();
+    const ilce = document.getElementById("ilceInput").value.trim();
+    const yapimYili = parseInt(document.getElementById("yapimYili").value, 10);
+    const katSayisi = parseInt(document.getElementById("katSayisi").value, 10);
+    const zeminDukkan = form.elements["zeminDukkan"].value;
+    const bitisik = form.elements["bitisik"].value;
+    const hasar = document.getElementById("hasar").value;
+
+    const kullanimAmaci = document.getElementById("kullanimAmaci").value;
+    const kisaKolon = form.elements["kisaKolon"].value;
+    const agirCikma = document.getElementById("agirCikma").value;
+    const planTipi = document.getElementById("planTipi").value;
+
+    let bitisikHiza = "yok";
+    if (bitisik === "evet") {
+        bitisikHiza = document.getElementById("bitisikHiza").value || "uyumlu";
+    }
+
+    const payload = {
+        il,
+        ilce,
+        yapimYili,
+        katSayisi,
+        zeminDukkan,
+        bitisik,
+        hasar,
+        kullanimAmaci,
+        kisaKolon,
+        agirCikma,
+        planTipi,
+        bitisikHiza
+        // istersen crackPuan'ı da eklersin ama backend'de kullanmıyoruz şimdilik
+    };
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/api/risk-hesapla", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error("Sunucu hatası");
+        }
+
+        const data = await response.json();
+
+        // Rozet ve sonuç alanlarını güncelleyen kısım
+        const riskBadge = document.getElementById("riskBadge");
+        const resultContent = document.getElementById("resultContent");
+
+        function genelRiskBadgeClass(seviye) {
+            if (seviye === "Düşük") return "badge-low";
+            if (seviye === "Orta") return "badge-mid";
+            return "badge-high";
+        }
+
+        riskBadge.textContent = data.genelSeviye + " risk";
+        riskBadge.className = "badge " + genelRiskBadgeClass(data.genelSeviye);
+
+        const detayHtml = (data.detaylar || [])
+            .map(d => `<span class="pill">${d}</span>`)
+            .join("");
+
+        resultContent.innerHTML = `
+            <div class="score">
+                ${data.toplamPuan}
+                <small> (Deprem + Yapısal Ön Skor)</small>
+            </div>
+
+            <div class="pill-row">
+                <span class="pill"><strong>Deprem Tehlikesi:</strong> ${data.depremSeviye} (puan: ${data.depremPuan})</span>
+                <span class="pill"><strong>Yapısal Skor:</strong> ${data.yapisalSeviye} (puan: ${data.yapisalPuan})</span>
+                <span class="pill"><strong>Zemin Sınıfı (tahmini):</strong> ${data.zeminSinifi || "Bilinmiyor"}</span>
+            </div>
+
+            <div class="pill-row">
+                ${detayHtml}
+            </div>
+
+            <p>${data.aciklama}</p>
+
+            <p class="muted">
+                Bu puanlama, il/ilçe deprem tehlikesi, tahmini zemin sınıfı ve formdaki
+                bina bilgilerine göre oluşturulmuş basit bir ön tarama algoritmasıdır.
+                Resmî deprem performans analizi yerine geçmez.
+            </p>
+        `;
+    } catch (err) {
+        console.error(err);
+        resultContent.innerHTML = `
+            <p style="color:#fecaca;">
+                Sunucuya bağlanırken hata oluştu. FastAPI uygulamasının çalıştığından emin olun.
+            </p>
+        `;
+    }
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Isletim sistemi
+.DS_Store
+Thumbs.db
+
+# Not: egitilmis model (risk_model.joblib, etiket_encoder.joblib) ve
+# sentetik veri (sentetik_bina_verisi.csv) BILEREK depoda tutuluyor --
+# train_model.py ve sentetik_veri_uret.py ile yeniden uretilebilirler.
+# Kullanici kayitlari:
+veri_kayitlari.csv
